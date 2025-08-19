@@ -14,26 +14,26 @@ class Config:
     pattern: str
 
     @classmethod
-    def from_namespace(cls, ns: argparse.Namespace) -> "Config":
+    def build_from_args(cls, args: argparse.Namespace) -> "Config":
         # Validation here
-        if ns.depth < -1:
+        if args.depth < 0:
             raise ValueError("Depth must be -1 (unlimited) or >= 0")
         try:
-            re.compile(ns.pattern)
+            re.compile(args.pattern)
         except re.error as exc:
             raise InvalidPatternError(f"Invalid regex: {exc}")
-        if not ns.folder.is_dir():
-            raise ValueError(f"Folder {ns.folder} does not exist or is not a directory")
-        return cls(folder=ns.folder, depth=ns.depth, pattern=ns.pattern)
+        if not args.folder.is_dir():
+            raise ValueError(f"Folder {args.folder} does not exist or is not a directory")
+        return cls(folder=args.folder, depth=args.depth, pattern=args.pattern)
 
 def parse_args() -> Config:
-    parser = argparse.ArgumentParser(prog="files.py", description="File finder tool")
+    parser = argparse.ArgumentParser(prog="main.py", description="File finder tool")
     parser.add_argument("folder", type=Path, help="Folder path to search")
     parser.add_argument("depth", type=int, help="Search depth (-1 unlimited)")
     parser.add_argument("pattern", type=str, help="Regex pattern for filenames")
-    ns = parser.parse_args()
-    return Config.from_namespace(ns)
+    args = parser.parse_args()
+    return Config.build_from_args(args)
 
 if __name__ == "__main__":
-    config = parse_args()
+    config = parse_args() 
     print(config)
