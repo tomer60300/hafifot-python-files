@@ -23,9 +23,9 @@ class Config:
         logger.debug("Validating CLI arguments: %s", args)
 
         # Depth validation
-        if args.depth < 0:
+        if args.depth < 1:
             logger.error("Invalid depth specified: %s", args.depth)
-            raise ValueError("Depth must be 0 or greater")
+            raise ValueError("Depth must be 1 or greater")
 
         # Regex validation
         try:
@@ -35,7 +35,7 @@ class Config:
             raise InvalidPatternError(f"Invalid regex: {exc}")
 
         # Folder validation
-        if not args.folder.is_dir():
+        if not args.folder.is_dir() or args.folder.root=="":
             logger.error("Invalid folder: %s (does not exist or is not a directory)", args.folder)
             raise ValueError(f"Folder {args.folder} does not exist or is not a directory")
 
@@ -46,7 +46,7 @@ class Config:
 def parse_args() -> Config:
     parser = ArgumentParser(prog="main.py", description="File finder tool")
     parser.add_argument("folder", type=Path, help="Folder path to search")
-    parser.add_argument("depth", type=int, help="Search depth (-1 unlimited)")
+    parser.add_argument("depth", type=int, help="Search depth (1 ( immediate files, greater for sub-dirs)")
     parser.add_argument("pattern", type=str, help="Regex pattern for filenames")
     args = parser.parse_args()
     return Config.build_from_args(args)
