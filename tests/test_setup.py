@@ -1,3 +1,4 @@
+import re
 from argparse import Namespace
 from copy import deepcopy
 from pathlib import Path
@@ -34,6 +35,9 @@ FS_MOCK_TEMPLATE = [
 
 class TestConfig:
 
+    def _build_pattern_obj(self, regex: str) -> re.Pattern:
+        return re.compile(regex)
+
     @pytest.fixture
     def valid_args_object(self, tmp_path: Path) -> Namespace:
         VALID_DEPTH: int = 1
@@ -45,15 +49,14 @@ class TestConfig:
         return Namespace(folder=test_workspace_dir, depth=VALID_DEPTH, pattern=VALID_PATTERN)
 
     @pytest.mark.parametrize("depth", [1, 2], ids=["immediate files -- 1", "subfolder depth -- 2"])
-    @pytest.mark.parametrize("pattern", [".\.txt", r"^(a+)+", r"^C:\\Users\\[A-Za-z0-9_]+\\Documents\\.*"],
+    @pytest.mark.parametrize("regex", [".\.txt", r"^(a+)+", r"^C:\\Users\\[A-Za-z0-9_]+\\Documents\\.*"],
                              ids=["textfile-regex-", "a-regex", "Documents-regex-"])
-    def test_validation_input_valid(self, tmp_path: Path, depth: str, pattern: str):
-        args = Namespace(folder=tmp_path, depth=depth, pattern=pattern)
-        config_obj = Config.build_from_args(args)
+    def test_validation_input_valid(self, tmp_path: Path, depth: str, regex: str):
+        config_obj = Config.build(folder=tmp_path, depth=depth, regex=regex)
 
         assert config_obj.folder == tmp_path
         assert config_obj.depth == depth
-        assert config_obj.pattern == pattern
+        assert config_obj.pattern.pattern == regex
 
     @pytest.mark.parametrize(
         "field,value,errmsg",
@@ -66,11 +69,12 @@ class TestConfig:
         ],
         ids=["dir_not_exist", "empty dir path", "Negative Depth -- -5", "Zero Depth -- 0", "invalid_pattern"]
     )
-    def test_validation_invalid_field(self, valid_args_object, field, value, errmsg):
+    def test_validation_invalid_field(self, valid_args_object: Namespace, field, value, errmsg):
+
         invalid_args_object = deepcopy(valid_args_object)
         setattr(invalid_args_object, field, value)
         with pytest.raises(ValueError, match=errmsg):
-            Config.build_from_args(invalid_args_object)
+            Config.build(folder=invalid_args_object.folder, depth=invalid_args_object.depth,regex=invalid_args_object.pattern )
 
     def _create_fs_from_template(self, root_path: Path):
         """
@@ -92,8 +96,9 @@ class TestConfig:
     @pytest.mark.parametrize("depth", [1, 2, 3],
                              ids=["immediate files - 1", "subdir included - 2", "sub-subdir included - 3"])
     def test_search_operation(self, tmp_path: Path, depth: int):
+        MATCH_ALL_PATTERN = re.compile(r".*")
         self._create_fs_from_template(root_path=tmp_path)  # Filesystem tree created
-        result_paths_list = set(walk_with_depth(tmp_path, depth))  # Go
+        result_paths_list = set(walk_with_depth(tmp_path, depth, MATCH_ALL_PATTERN))
 
         mock_paths_list = set()
         for result_path in FS_MOCK_TEMPLATE:

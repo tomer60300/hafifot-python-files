@@ -10,7 +10,9 @@ if __name__ == "__main__":
     try:
         config = parse_args()
         logger.info("Parsed config: %s", config)
-        print(list(walk_with_depth(config.folder, config.depth)))
+
+        for result in walk_with_depth(config.folder, config.depth,config.pattern):
+            print(f"{result} -- ",end="")
     except Exception as exc:
         logger.critical("Fatal error: %s", exc, exc_info=True)
         raise
