@@ -74,7 +74,8 @@ class TestConfig:
         invalid_args_object = deepcopy(valid_args_object)
         setattr(invalid_args_object, field, value)
         with pytest.raises(ValueError, match=errmsg):
-            Config.build(folder=invalid_args_object.folder, depth=invalid_args_object.depth,regex=invalid_args_object.pattern )
+            Config.build(folder=invalid_args_object.folder, depth=invalid_args_object.depth,
+                         regex=invalid_args_object.pattern)
 
     def _create_fs_from_template(self, root_path: Path):
         """
