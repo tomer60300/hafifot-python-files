@@ -13,6 +13,8 @@ if __name__ == "__main__":
 
         for result in walk_with_depth(config.folder, config.depth,config.pattern):
             print(f"{result} -- ",end="")
-    except Exception as exc:
-        logger.critical("Fatal error: %s", exc, exc_info=True)
+    except Exception as ex:
+        logger.critical("Fatal error: %s", ex, exc_info=True)
         raise
+    except SystemExit as ex:
+        logger.critical("Argument parsing failed. Exit code=%s", ex.code)
