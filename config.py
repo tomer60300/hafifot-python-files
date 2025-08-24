@@ -4,42 +4,61 @@ from argparse import ArgumentParser, Namespace
 import logging
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 
-class InvalidPatternError(ValueError):
-    """Raised when the regex pattern is invalid."""
-
+class ArgsValidationError(TypeError, ValueError):
+    """Raised when input arguments are invalid."""
+    pass
 
 @dataclass(frozen=True)
 class Config:
     folder: Path
     depth: int
     pattern: re.Pattern
+    size: int
 
     @classmethod
-    def build(cls, folder: Path, depth: int, regex: str) -> Config:
+    def build(cls, folder: Path, depth: int, regex: str, size: int=0) -> Config:
         logger = logging.getLogger(__name__)
         logger.debug(f"Validating CLI arguments:\n Path:{folder} -- Depth: {depth} -- Regex: {regex}")
 
-        #Depth validation
-        if depth < 1:
-            logger.error("Invalid depth specified: %s", depth)
-            raise ValueError("Depth must be 1 or greater")
-
-        #Regex validation
-        try:
-            pattern = re.compile(regex)
-        except re.error as exc:
-            logger.error("Invalid regex pattern: %s (%s)", regex, exc)
-            raise InvalidPatternError(f"Invalid regex: {exc}")
-
-        # Folder validation
-        if not folder.is_dir() or folder.root=="":
-            logger.error("Invalid folder: %s (does not exist or is not a directory)", folder)
-            raise ValueError(f"Folder {folder} does not exist or is not a directory")
+        cls._validate_folder(folder)
+        cls._validate_depth(depth)
+        cls._validate_size(size)
+        pattern = cls._compile_regex(regex)
 
         logger.debug("Validation successful")
-        return cls(folder=folder, depth=depth, pattern=pattern)
+        return cls(folder=folder, depth=depth, pattern=pattern, size=size)
+
+    @staticmethod
+    def _validate_size(size: Optional[int]) -> None:
+        if size is not None:
+            if not isinstance(size, int):
+                raise ArgsValidationError("size must be int")
+            if size < 0:
+                raise ArgsValidationError("size non negative")
+
+    @staticmethod
+    def _validate_depth(depth: int) -> None:
+        if not isinstance(depth, int):
+            raise ArgsValidationError("depth must be int")
+        if depth < 1:
+            raise ArgsValidationError("depth must be positive")
+
+    @staticmethod
+    def _validate_folder(folder: Path) -> None:
+        if not isinstance(folder, Path):
+            raise ArgsValidationError("folder must be pathlib.Path")
+        if not folder.is_dir() or folder.root=="":
+            raise ArgsValidationError(f"{folder} is not a directory")
+
+    @staticmethod
+    def _compile_regex(regex: str) -> re.Pattern:
+        try:
+            return re.compile(regex)
+        except re.error as exc:
+            raise ArgsValidationError(f"Invalid regex: {exc}")
 
 
 def parse_args() -> Config:
@@ -47,5 +66,6 @@ def parse_args() -> Config:
     parser.add_argument("folder", type=Path, help="Folder path to search")
     parser.add_argument("depth", type=int, help="Search depth (1 ( immediate files, greater for sub-dirs)")
     parser.add_argument("regex", type=str, help="Regex pattern for filenames")
+    parser.add_argument("--size", type=int, default=0, help="Minimum file size (bytes) to filter by")
     args = parser.parse_args()
     return Config.build(**vars(args))
