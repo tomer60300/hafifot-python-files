@@ -95,12 +95,9 @@ class TestConfig:
         self._create_fs_from_template(root_path=tmp_path)  # Filesystem tree created
         result_paths_list = set(walk_with_depth(tmp_path, depth))  # Go
 
-        if depth == 0:
-            assert {tmp_path} == result_paths_list
-        else:
-            mock_paths_list = set()
-            for result_path in FS_MOCK_TEMPLATE:
-                if result_path.count('/') < depth and not result_path.endswith('/'):
-                    full_path = tmp_path / result_path
-                    mock_paths_list.add(full_path)
-            assert result_paths_list == mock_paths_list
+        mock_paths_list = set()
+        for result_path in FS_MOCK_TEMPLATE:
+            if result_path.count('/') < depth and not result_path.endswith('/'):
+                full_path = tmp_path / result_path
+                mock_paths_list.add(full_path)
+        assert result_paths_list == mock_paths_list
