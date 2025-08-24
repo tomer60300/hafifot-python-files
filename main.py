@@ -11,7 +11,7 @@ if __name__ == "__main__":
         config = parse_args()
         logger.info("Parsed config: %s", config)
 
-        for result in walk_with_depth(config.folder, config.depth,config.pattern):
+        for result in walk_with_depth(config.folder, config.depth,config.pattern,config.size):
             print(f"{result} -- ",end="")
     except Exception as ex:
         logger.critical("Fatal error: %s", ex, exc_info=True)
