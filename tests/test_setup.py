@@ -86,9 +86,6 @@ class TestConfig:
             Config.build(folder=invalid_args_object.folder, depth=invalid_args_object.depth,
                          regex=invalid_args_object.pattern, size=invalid_args_object.size)
 
-    def test_validation_argument_valid(self):
-        pass  # Todo
-
     def _create_fs_from_template(self, root_path: Path):
         """
         Create files and directories from a flat list of paths.
