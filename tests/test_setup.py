@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from config import Config, ArgsValidationError
-from directory.search import walk_with_depth
+from operation.search import walk_filesystem_by_filters
 
 FS_MOCK_TEMPLATE = [
     "root.txt",
@@ -89,7 +89,7 @@ class TestConfig:
     def _create_fs_from_template(self, root_path: Path):
         """
         Create files and directories from a flat list of paths.
-        - paths ending with '/' => directory
+        - paths ending with '/' => operation
         - others => file
         """
         paths = FS_MOCK_TEMPLATE
@@ -108,7 +108,7 @@ class TestConfig:
     def test_search_depth_filter(self, tmp_path: Path, depth: int):
         MATCH_ALL_PATTERN = re.compile(r".*")
         self._create_fs_from_template(root_path=tmp_path)  # Filesystem tree created
-        result_paths_list = set(walk_with_depth(tmp_path, depth, MATCH_ALL_PATTERN))
+        result_paths_list = set(walk_filesystem_by_filters(tmp_path, depth, MATCH_ALL_PATTERN))
 
         mock_paths_list = set()
         for result_path in FS_MOCK_TEMPLATE:
@@ -134,9 +134,9 @@ class TestConfig:
                 full_path = tmp_path / result_path
                 mock_paths_list.add(full_path)
 
-        filter_under_size = set(walk_with_depth(tmp_path, FIXED_DEPTH, MATCH_ALL_PATTERN,max_size=FIXED_SIZE-1))
-        filter_equal_size = set(walk_with_depth(tmp_path, FIXED_DEPTH, MATCH_ALL_PATTERN,max_size=FIXED_SIZE))
-        filter_above_size = set(walk_with_depth(tmp_path, FIXED_DEPTH, MATCH_ALL_PATTERN,max_size=FIXED_SIZE+1))
+        filter_under_size = set(walk_filesystem_by_filters(tmp_path, FIXED_DEPTH, MATCH_ALL_PATTERN, max_size=FIXED_SIZE - 1))
+        filter_equal_size = set(walk_filesystem_by_filters(tmp_path, FIXED_DEPTH, MATCH_ALL_PATTERN, max_size=FIXED_SIZE))
+        filter_above_size = set(walk_filesystem_by_filters(tmp_path, FIXED_DEPTH, MATCH_ALL_PATTERN, max_size=FIXED_SIZE + 1))
 
         assert filter_equal_size == mock_paths_list
         assert filter_above_size == mock_paths_list
