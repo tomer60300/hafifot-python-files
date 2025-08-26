@@ -11,6 +11,7 @@ from schema.parser import Config
 
 logger = logging.getLogger(__name__)
 
+
 def _add_file_to_archive(archive_name: Path, file_path_obj: Path):
     with ZipFile(archive_name, "a", compression=ZIP_DEFLATED) as archive_file:
         _add_unique_file_to_zip(archive_file, file_path_obj)
@@ -21,9 +22,6 @@ def _add_file_to_locked_archive(archive_name: Path, file_path_obj: Path, archive
         archive_file.setpassword(archive_code.encode("utf-8"))
 
         _add_unique_file_to_zip(archive_file, file_path_obj)
-
-
-
 
 
 @dataclass(frozen=True)
@@ -41,7 +39,6 @@ class Mode:
         operation_func = state_to_mode_table[(self.archive_filter, self.archive_lock_filter)]
         if operation_func is not None:
             operation_func(**kwargs)
-
 
 
 def execute(config: Config):
@@ -71,8 +68,10 @@ def _add_unique_file_to_zip(archive_file: Union[ZipFile, AESZipFile], file_path_
                 file_name = candidate
                 break
             index += 1
-
-    archive_file.write(file_path_obj, arcname=file_name)
+    try:
+        archive_file.write(file_path_obj, arcname=file_name)
+    except PermissionError as ex:
+        logger.error(f"Permission error: {ex}, can't archive {file_path_obj.name}")
 
 
 def scan_filesystem_with_filter(folder: Path, depth: int, pattern: re.Pattern, mode: Mode, max_size: int = 0,
@@ -108,10 +107,7 @@ def scan_filesystem_with_filter(folder: Path, depth: int, pattern: re.Pattern, m
             current_operation_params = {k: v for k, v in all_operation_params.items() if v is not None}
             mode.run(**current_operation_params)
 
-
             yield file_path_obj
-
-
 
         # prune dirs if max depth reached
         if current_depth >= depth - 1:
