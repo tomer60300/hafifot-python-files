@@ -1,7 +1,7 @@
-from config import parse_args
+from schema.parser import parse_args
 import logging
 from logging_conf import configure_logging
-from directory.search import walk_with_depth
+from operations.operation import execute
 
 if __name__ == "__main__":
     configure_logging("DEBUG")
@@ -9,10 +9,12 @@ if __name__ == "__main__":
 
     try:
         config = parse_args()
-        logger.info("Parsed config: %s", config)
+        logger.info("Parsed schema: %s", config)
+        logger.debug(
+            "Special mode %s" % ("*Size* " if config.max_size != 0 else "") + ("*Archive* " if config.archive_name else ""))
 
-        for result in walk_with_depth(config.folder, config.depth,config.pattern):
-            print(f"{result} -- ",end="")
+        execute(config)
+
     except Exception as ex:
         logger.critical("Fatal error: %s", ex, exc_info=True)
         raise
