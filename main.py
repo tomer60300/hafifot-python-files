@@ -1,7 +1,7 @@
-from config import parse_args
+from schema.parser import parse_args
 import logging
 from logging_conf import configure_logging
-from operation.search import walk_filesystem_by_filters, archive_files_by_filters
+from operations.operation import execute
 
 if __name__ == "__main__":
     configure_logging("DEBUG")
@@ -9,15 +9,12 @@ if __name__ == "__main__":
 
     try:
         config = parse_args()
-        logger.info("Parsed config: %s", config)
+        logger.info("Parsed schema: %s", config)
         logger.debug(
-            "Special mode %s" % ("*Size* " if config.size != 0 else "") + ("*Archive* " if config.archive_name else ""))
+            "Special mode %s" % ("*Size* " if config.max_size != 0 else "") + ("*Archive* " if config.archive_name else ""))
 
-        if config.archive_name:
-            archive_files_by_filters(config.archive_name,config.folder, config.depth, config.pattern, config.size)  # Todo call params missing
-        else:
-            for result in walk_filesystem_by_filters(config.folder, config.depth, config.pattern, config.size):
-                print(f"{result} -- ", end="")
+        execute(config)
+
     except Exception as ex:
         logger.critical("Fatal error: %s", ex, exc_info=True)
         raise
