@@ -11,7 +11,7 @@ if __name__ == "__main__":
         config = parse_args()
         logger.info("Parsed schema: %s", config)
         logger.debug(
-            "Special mode %s" % ("*Size* " if config.max_size != 0 else "") + ("*Archive* " if config.archive_name else ""))
+            "Special mode %s" % ("*Size* " if config.max_size is not None else "") + ("*Archive* " if config.archive_name else ""))
 
         execute(config)
 

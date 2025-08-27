@@ -33,6 +33,7 @@ class Mode:
     def run(self, **kwargs):
         state_to_mode_table = {
             (False, False): None,
+            (False, True): None, #Invalid combo, already been validated
             (True, False): _add_file_to_archive,
             (True, True): _add_file_to_locked_archive,
         }
@@ -63,7 +64,7 @@ def _add_unique_file_to_zip(archive_file: Union[ZipFile, AESZipFile], file_path_
         stem, suffix = file_path_obj.stem, file_path_obj.suffix
         index = 1
         while True:
-            candidate = f"{stem}-{index}.{suffix}"
+            candidate = f"{stem}-{index}{suffix}"
             if candidate not in exist_names_in_archive:
                 file_name = candidate
                 break

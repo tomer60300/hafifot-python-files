@@ -35,13 +35,13 @@ class Config:
 
     def __post_init__(self) -> None:
         # folder
-        if not isinstance(self.folder, Path) or not self.folder.is_dir() or self.folder.name=="":
+        if not isinstance(self.folder, Path) or not self.folder.is_dir() or self.folder.name == "":
             raise ArgsValidationError(f"{self.folder} is not an existing directory")
         # depth
         if not isinstance(self.depth, int) or self.depth < 1:
             raise ArgsValidationError("depth must be positive integer")
         # size
-        if self.max_size is not None and (not isinstance(self.max_size, int) or  self.max_size < 0) :
+        if self.max_size is not None and (not isinstance(self.max_size, int) or self.max_size < 0):
             raise ArgsValidationError("max_size must be non-negative")
         # archive_path
         if self.archive_name is not None:
@@ -54,7 +54,8 @@ class Config:
         if self.archive_code is not None and not isinstance(self.archive_code, str):
             raise ArgsValidationError("archive_code must be a string")
         if self.archive_code and not self.archive_name:
-            raise ArgsValidationError("archive_code given but --archive-path is missing")
+            raise ArgsValidationError(
+                "password given but --but archive file to lock is missing. archive_code without archive_name")
 
 
 def parse_args() -> Config:
@@ -63,8 +64,11 @@ def parse_args() -> Config:
     parser.add_argument("depth", type=int, help="Search depth (1 ( immediate files, greater for sub-dirs)")
     parser.add_argument("regex", type=str, help="Regex pattern for filenames")
     parser.add_argument("--size", type=int, dest="max_size", default=None,
-                        help="Minimum file size (bytes) to filter by")
-    parser.add_argument("--archive_name", dest="archive_name", type=Path, default=None,
+                        help="Maximum file size (bytes) to filter by")
+    parser.add_argument("--archive-name", dest="archive_name", type=Path, default=None,
                         help="Enable archive result mode, give archive filename")
+    parser.add_argument("--password", dest="archive_code", type=Path, default=None,
+                        help="Enable archive locking mechanism, give archive password")
+
     args = parser.parse_args()
     return Config.build(**vars(args))
